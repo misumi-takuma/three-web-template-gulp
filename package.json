@@ -1,0 +1,36 @@
+{
+  "name": "three_template_gulp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npx gulp dev",
+    "prod": "npx gulp dev --env production",
+    "build": "npx gulp build --env production"
+  },
+  "dependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "autoprefixer": "^10.3.7",
+    "babel-loader": "^8.2.2",
+    "browser-sync": "^2.27.5",
+    "del": "^6.0.0",
+    "fibers": "^5.0.0",
+    "gulp": "^4.0.2",
+    "gulp-imagemin": "^7.0.1",
+    "gulp-plumber": "^1.2.1",
+    "gulp-postcss": "^9.0.1",
+    "gulp-sass": "^5.0.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "imagemin-gifsicle": "^7.0.0",
+    "imagemin-mozjpeg": "^9.0.0",
+    "imagemin-pngquant": "^9.0.2",
+    "imagemin-svgo": "^8.0.0",
+    "minimist": "^1.2.5",
+    "postcss": "^8.3.9",
+    "sass": "^1.42.1",
+    "three": "^0.133.1",
+    "webpack": "^5.58.1",
+    "webpack-stream": "^7.0.0"
+  }
+}
