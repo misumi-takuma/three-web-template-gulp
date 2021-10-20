@@ -15,6 +15,12 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modeles/,
         loader: 'babel-loader'
+      },
+      {
+        test: /\.(vert|frag|glsl)$/,
+        use: {
+          loader: 'webpack-glsl-loader'
+        }
       }
     ]
   }
