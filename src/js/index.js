@@ -76,19 +76,67 @@ class ImagePlane {
     this.mesh.position.set(x, y, this.mesh.position.z)
   }
 
-  update() {
+  update(offset) {
     this.setParams()
 
-    this.mesh.material.uniforms.uTime.value++
+    this.mesh.material.uniforms.uTime.value = offset
   }
 }
+
+// リサイズ処理
+let timeoutId = 0
+const resize = () => {
+  // three.jsのリサイズ
+  const width = window.innerWidth
+  const height = window.innerHeight
+
+  canvasSize.w = width
+  canvasSize.h = height
+
+  renderer.setPixelRatio(window.devicePixelRatio)
+  renderer.setSize(width, height)
+
+  camera.aspect = width / height
+  camera.updateProjectionMatrix()
+
+  // カメラの距離を計算し直す
+  const fov = 60
+  const fovRad = (fov / 2) * (Math.PI / 180)
+  const dist = canvasSize.h / 2 / Math.tan(fovRad)
+  camera.position.z = dist
+}
+
+let targetScrollY = 0 // 本来のスクロール位置
+let currentScrollY = 0 // 線形補間を適用した現在のスクロール位置
+let scrollOffset = 0 // 上記2つの差分
+
+const lerp = (start, end, multiplier) => {
+  return (1 - multiplier) * start + multiplier * end
+}
+
+const updateScroll = () => {
+  // スクロール位置を取得
+  targetScrollY = document.documentElement.scrollTop
+  // リープ関数でスクロール位置をなめらかに追従
+  currentScrollY = lerp(currentScrollY, targetScrollY, 0.1)
+
+  scrollOffset = targetScrollY - currentScrollY
+}
+
+// 慣性スクロール
+const scrollArea = document.querySelector('.scrollable')
+// ボディの高さがなくなるのでコンテンツ分指定する
+document.body.style.height = `${scrollArea.getBoundingClientRect().height}px`
 
 const imagePlaneArray = []
 
 // 毎フレーム呼び出す
 const loop = () => {
+  updateScroll()
+
+  scrollArea.style.transform = `translate3d(0,${-currentScrollY}px,0)`
   for (const plane of imagePlaneArray) {
-    plane.update()
+    plane.update(scrollOffset)
   }
   renderer.render(scene, camera)
 
@@ -109,6 +157,13 @@ const main = () => {
     }
 
     loop()
+  })
+
+  // リサイズ（負荷軽減のためリサイズが完了してから発火する）
+  window.addEventListener('resize', () => {
+    if (timeoutId) clearTimeout(timeoutId)
+
+    timeoutId = setTimeout(resize, 200)
   })
 }
 
