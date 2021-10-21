@@ -35,28 +35,61 @@ camera.position.z = dist
 const scene = new Scene()
 
 const loader = new TextureLoader()
-const texture = loader.load('https://picsum.photos/id/237/1500/800')
 
-const uniforms = {
-  uTexture: { value: texture },
-  uImageAspect: { value: 1920 / 1280 }, // 画像のアスペクト
-  uPlaneAspect: { value: 800 / 500 }, // プレーンのアスペクト
-  uTime: { value: 0 } // 時間経過
+const createMesh = (img) => {
+  const texture = loader.load(img.src)
+
+  const uniforms = {
+    uTexture: { value: texture },
+    uImageAspect: { value: img.naturalWidth / img.naturalHeight },
+    uPlaneAspect: { value: img.clientWidth / img.clientHeight },
+    uTime: { value: 0 }
+  }
+  const geo = new PlaneBufferGeometry(1, 1, 100, 100) // 後から画像のサイズにscaleするので1にしておく
+  const mat = new ShaderMaterial({
+    uniforms,
+    vertexShader: vertexSource,
+    fragmentShader: fragmentSource
+  })
+
+  const mesh = new Mesh(geo, mat)
+
+  return mesh
 }
-const geo = new PlaneBufferGeometry(800, 500, 100, 100)
-const mat = new ShaderMaterial({
-  uniforms,
-  vertexShader: vertexSource,
-  fragmentShader: fragmentSource
-})
 
-const mesh = new Mesh(geo, mat)
+class ImagePlane {
+  constructor(mesh, img) {
+    this.refImage = img // 参照するimg要素
+    this.mesh = mesh
+  }
 
-scene.add(mesh)
+  setParams() {
+    // 参照するimg要素から大きさ、位置を取得してセットする
+    const rect = this.refImage.getBoundingClientRect()
+
+    this.mesh.scale.x = rect.width
+    this.mesh.scale.y = rect.height
+
+    // window座標をWebGL座標に変換
+    const x = rect.left - canvasSize.w / 2 + rect.width / 2
+    const y = -rect.top + canvasSize.h / 2 - rect.height / 2
+    this.mesh.position.set(x, y, this.mesh.position.z)
+  }
+
+  update() {
+    this.setParams()
+
+    this.mesh.material.uniforms.uTime.value++
+  }
+}
+
+const imagePlaneArray = []
 
 // 毎フレーム呼び出す
 const loop = () => {
-  uniforms.uTime.value++
+  for (const plane of imagePlaneArray) {
+    plane.update()
+  }
   renderer.render(scene, camera)
 
   requestAnimationFrame(loop)
@@ -64,6 +97,17 @@ const loop = () => {
 
 const main = () => {
   window.addEventListener('load', () => {
+    const imageArray = [...document.querySelectorAll('img')]
+    for (const img of imageArray) {
+      const mesh = createMesh(img)
+      scene.add(mesh)
+
+      const imagePlane = new ImagePlane(mesh, img)
+      imagePlane.setParams()
+
+      imagePlaneArray.push(imagePlane)
+    }
+
     loop()
   })
 }
